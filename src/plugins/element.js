@@ -1,14 +1,17 @@
 import Vue from 'vue'
-import { Form,FormItem,Input,Button,
-          Container,Header,Aside,Main,
-          Menu,Submenu,MenuItem,
-          Breadcrumb,BreadcrumbItem,Card,Row,Col,
-          Table,TableColumn,Switch,Tooltip,Pagination,
-          Dialog} from 'element-ui'
+import {
+  Form, FormItem, Input, Button,
+  Container, Header, Aside, Main,
+  Menu, Submenu, MenuItem,
+  Breadcrumb, BreadcrumbItem, Card, Row, Col,
+  Table, TableColumn, Switch, Tooltip, Pagination,
+  Dialog, Tag, Tree,Select,Option
+} from 'element-ui'
 
 import { Message } from 'element-ui'
-
- Vue.prototype.$message = Message
+import { MessageBox } from 'element-ui'
+Vue.prototype.$confirm = MessageBox
+Vue.prototype.$message = Message
 
 Vue.use(Button)
 Vue.use(Form)
@@ -40,3 +43,7 @@ Vue.use(Tooltip)
 Vue.use(Pagination)
 
 Vue.use(Dialog)
+Vue.use(Tag)
+Vue.use(Tree)
+Vue.use(Select)
+Vue.use(Option)

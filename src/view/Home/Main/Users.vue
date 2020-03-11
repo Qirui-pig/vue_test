@@ -10,7 +10,7 @@
 
     <!-- 添加用户弹窗 -->
     <el-dialog title="添加用户" @close="dialogClose" :visible.sync="addDialogVisible" width="50%">
-      <!-- 内容主体区 -->
+      <!-- 内容主体区 用户添加-->
       <el-form :model="addForm" :rules="addFromRules" ref="addFromRef" lable-width="70px">
         <el-form-item label="用户名称" prop="username">
           <el-input v-model="addForm.username"></el-input>
@@ -31,9 +31,9 @@
         <el-button type="primary" @click="addUser">确 定</el-button>
       </span>
     </el-dialog>
-    <!-- 编辑弹出框 -->
+
     <el-dialog title="修改信息" @close="Close" :visible.sync="editVisible" width="50%">
-      <!-- 内容主体区 -->
+      <!-- 内容主体区 用户修改-->
       <el-form :model="editForm" :rules="addFromRules" ref="editFromRef" lable-width="70px">
         <el-form-item label="用户名称" disabled prop="username">
           <el-input v-model="editForm.username" disabled></el-input>
@@ -45,13 +45,31 @@
           <el-input v-model="editForm.mobile"></el-input>
         </el-form-item>
       </el-form>
-      <!-- 底部区 -->
       <span slot="footer" class="dialog-footer">
         <el-button @click="editVisible = false">取 消</el-button>
         <el-button type="primary" @click="toEditForm">确 定</el-button>
       </span>
     </el-dialog>
+    <!-- 用户角色 -->
+    <el-dialog title="分配角色" :visible.sync="roleVisible" width="50%" @close="closeRole">
+      <div>
+        <p>当前用户：{{userInfo.username}}</p>
+        <p>当前角色：{{userInfo.role_name}}</p>
+        <el-select v-model="selectRole" placeholder="请选择">
+          <el-option
+            v-for="item in roles"
+            :key="roles.id"
+            :label="item.roleName"
+            :value="item.id"
+          ></el-option>
+        </el-select>
+      </div>
 
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="roleVisible = false">取 消</el-button>
+        <el-button type="primary" @click="ToSetRole">确 定</el-button>
+      </span>
+    </el-dialog>
     <!-- 卡片 -->
     <el-card class="box-card">
       <!-- 栅格系统 24满 gutter 之间的距离 -->
@@ -80,8 +98,18 @@
         </el-table-column>
         <el-table-column label="操作" width="190px">
           <template slot-scope="scope" style="dispaly:flex">
-            <el-button type="primary" @click="EidtDialog(scope.row.id)" size="mini" icon="el-icon-edit"></el-button>
-            <el-button type="danger" @click="deleteUser(scope.row.id)" size="mini" icon="el-icon-delete"></el-button>
+            <el-button
+              type="primary"
+              @click="EidtDialog(scope.row.id)"
+              size="mini"
+              icon="el-icon-edit"
+            ></el-button>
+            <el-button
+              type="danger"
+              @click="deleteUser(scope.row.id)"
+              size="mini"
+              icon="el-icon-delete"
+            ></el-button>
             <el-tooltip
               class="item"
               :enterable="false"
@@ -89,7 +117,12 @@
               content="分配角色"
               placement="top"
             >
-              <el-button type="warning" size="mini" icon="el-icon-setting"></el-button>
+              <el-button
+                type="warning"
+                size="mini"
+                icon="el-icon-setting"
+                @click="setRole(scope.row)"
+              ></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -139,6 +172,7 @@ export default {
       total: 0,
       addDialogVisible: false,
       editVisible: false,
+      roleVisible: false,
       // 添加用户
       addForm: { username: "", password: "", email: "", mobile: "" },
       // 表单验证规则
@@ -154,7 +188,10 @@ export default {
         email: [{ validator: checkEmail, trigger: "blur" }],
         mobile: [{ validator: checkMobile, trigger: "blur" }]
       },
-      editForm:{}
+      editForm: {},
+      userInfo: {},
+      roles: [],
+      selectRole:''
     };
   },
   created() {
@@ -200,6 +237,9 @@ export default {
     Close() {
       this.$refs.editFromRef.resetFields();
     },
+    closeRole(){
+      this.selectRole = ''
+    },
     addUser() {
       this.$refs.addFromRef.validate(valid => {
         if (!valid) return;
@@ -212,26 +252,46 @@ export default {
           this.$message.success("创建成功");
           this.getUserList();
         });
-      })
+      });
     },
-    async EidtDialog(id){
-      const {data:ret} = await this.$http.get(`users/${id}`)
-      this.editForm = ret.data
-      this.editVisible = true
+    async EidtDialog(id) {
+      const { data: ret } = await this.$http.get(`users/${id}`);
+      this.editForm = ret.data;
+      this.editVisible = true;
     },
-    async toEditForm(){
-      const { data:ret } = await this.$http.put(`users/${this.editForm.id}`,this.editForm)
-      if(ret.meta.status !== 200)return this.$message.error('编辑失败')
-      this.editVisible = false
-      this.$message.success('编辑成功')
+    async toEditForm() {
+      const { data: ret } = await this.$http.put(
+        `users/${this.editForm.id}`,
+        this.editForm
+      );
+      if (ret.meta.status !== 200) return this.$message.error("编辑失败");
+      this.editVisible = false;
+      this.$message.success("编辑成功");
       this.getUserList();
     },
-    async deleteUser(id){
-      const { data:ret } = await this.$http.delete(`users/${id}`)
-      if( ret.meta.status !== 200 )return this.$message.error('删除失败')
-      this.$message.success('删除成功')
+    async deleteUser(id) {
+      const { data: ret } = await this.$http.delete(`users/${id}`);
+      if (ret.meta.status !== 200) return this.$message.error("删除失败");
+      this.$message.success("删除成功");
       this.getUserList();
-    }
+    },
+    async setRole(userInfo) {
+      // console.log(userInfo);
+      // 获取角色列表
+      const { data: ret } = await this.$http.get("roles");
+      this.roles = ret.data;
+
+      this.userInfo = userInfo;
+      this.roleVisible = true;
+    },
+    async ToSetRole(){
+      if( !this.selectRole )return this.$message.error('请选择分配的角色')
+      const { data:ret } = await this.$http.put(`users/${this.userInfo.id}/role`,{rid:this.selectRole})
+      if(ret.meta.status !== 200)return this.$message.error("更新角色失败")
+      this.$message.success("更新角色成功")
+      this.getUserList();
+      this.roleVisible = false
+    } 
   }
 };
 </script>
