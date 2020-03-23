@@ -33,6 +33,19 @@ const router = new VueRouter({
       {
         path:'/roles',
         component:()=>import ('../view/Home/Main/Power/Roles.vue')
+      },
+      {
+        path:'/goods',
+        component:()=>import ('../view/Home/Main/Goods/Goods.vue')
+      },
+      {
+        path:'/categories',
+        component:()=>import ('../view/Home/Main/Goods/Categories.vue')
+      },
+      {
+        path:'/params',
+        component:()=>import ('../view/Home/Main/Goods/Params.vue')
+        
       }
     ]
     }
